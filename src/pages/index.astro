@@ -18,19 +18,30 @@ interface Oferta {
 
 const ofertas = (ofertasRaw as Oferta[]).filter((o) => o.affiliate_url && o.title);
 
-const PLATFORMS: Record<string, { label: string; dot: string }> = {
-  amazon: { label: "Amazon", dot: "#F2A93B" },
-  shopee: { label: "Shopee", dot: "#EE4D2D" },
-  mercadolivre: { label: "Mercado Livre", dot: "#FFD100" },
+const TELEGRAM_URL = "https://t.me/ofertastel";
+const YOUTUBE_SUBSCRIBE_URL = "https://www.youtube.com/@ofertastel?sub_confirmation=1";
+
+const PLATFORMS: Record<string, { label: string; badgeBg: string; badgeText: string; dot: string }> = {
+  amazon: { label: "Amazon", badgeBg: "bg-store-amazon-badge", badgeText: "text-store-amazon-primary", dot: "bg-store-amazon-primary" },
+  shopee: { label: "Shopee", badgeBg: "bg-store-shopee-badge", badgeText: "text-store-shopee-primary", dot: "bg-store-shopee-primary" },
+  mercadolivre: { label: "Mercado Livre", badgeBg: "bg-store-mercadolivre-primary", badgeText: "text-store-mercadolivre-badge", dot: "bg-store-mercadolivre-primary" },
 };
 
-function platformLabel(key: string) {
-  return PLATFORMS[key]?.label ?? key;
+function platformMeta(key: string) {
+  return PLATFORMS[key] ?? { label: key, badgeBg: "bg-surface-container-high", badgeText: "text-on-surface", dot: "bg-outline" };
 }
 
 function formatBRL(value: number | null) {
   if (value === null || value === undefined) return null;
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function savingsLabel(o: Oferta) {
+  if (o.price != null && o.original_price != null && o.original_price > o.price) {
+    return `Economize ${formatBRL(o.original_price - o.price)}`;
+  }
+  if (o.discount_percent) return `-${Math.round(o.discount_percent)}% OFF`;
+  return null;
 }
 
 function formatWhen(raw: string) {
@@ -50,6 +61,8 @@ function normalize(s: string) {
 
 const sorted = [...ofertas].sort((a, b) => (b.collected_at || "").localeCompare(a.collected_at || ""));
 const platformsPresent = Array.from(new Set(sorted.map((o) => o.platform)));
+const countsByPlatform: Record<string, number> = {};
+for (const o of sorted) countsByPlatform[o.platform] = (countsByPlatform[o.platform] || 0) + 1;
 const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : null;
 ---
 
@@ -57,437 +70,213 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
   title="Central de Ofertas — Amazon, Shopee e Mercado Livre num lugar só"
   description="Todas as ofertas que a gente encontra na Amazon, Shopee e Mercado Livre — não só o top 5 que cabe no Telegram. Atualiza sozinho, direto da fonte."
 >
-  <header class="hero">
-    <div class="hero__inner">
-      <p class="hero__eyebrow">achados de todo dia</p>
-      <h1 class="hero__title">CENTRAL<br />DE OFERTAS</h1>
-      <p class="hero__subtitle">
-        No Telegram cabem só as 5 melhores de cada rodada. Aqui ficam <strong>todas</strong> —
+  <header class="w-full bg-surface border-b border-border-subtle">
+    <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-md flex flex-col gap-space-sm">
+      <div class="flex items-center justify-between gap-gutter flex-wrap">
+        <div class="flex items-center gap-space-sm">
+          <span class="material-symbols-outlined text-secondary text-[26px]">local_fire_department</span>
+          <span class="font-headline-md text-headline-md font-extrabold tracking-tight text-primary">CENTRAL DE OFERTAS</span>
+        </div>
+        <div class="flex items-center gap-space-sm flex-wrap">
+          {
+            latest && (
+              <span class="hidden sm:inline-flex items-center gap-space-xs bg-surface-container-low px-space-md py-space-xs rounded-full">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-savings-positive opacity-75" />
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-savings-positive" />
+                </span>
+                <span class="font-body-sm text-body-sm text-text-muted">carimbado às {latest}</span>
+              </span>
+            )
+          }
+          <a
+            class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-telegram hover:opacity-90 text-white font-label-action text-label-action transition-opacity"
+            href={TELEGRAM_URL}
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M21.94 4.11c.26-1.11-.85-2-1.87-1.56L2.4 10.13c-1.2.5-1.19 2.2.02 2.68l4.5 1.77 1.7 5.46c.24.77 1.2 1.03 1.8.48l2.5-2.3 4.4 3.24c.9.66 2.18.18 2.42-.92l3.2-16.43ZM8.6 13.3l9.6-6.02c.3-.19.6.2.35.44l-7.9 7.3c-.3.28-.48.65-.53 1.05l-.23 1.9-.6-2.6c-.1-.44-.4-.8-.79-1.02Z"></path>
+            </svg>
+            <span>Grupo no Telegram</span>
+          </a>
+          <a
+            class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-youtube hover:opacity-90 text-white font-label-action text-label-action transition-opacity"
+            href={YOUTUBE_SUBSCRIBE_URL}
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.5v-7l6.3 3.5-6.3 3.5Z"></path>
+            </svg>
+            <span>Inscrever no YouTube</span>
+          </a>
+        </div>
+      </div>
+      <p class="font-body-sm text-body-sm text-text-muted max-w-2xl">
+        No Telegram cabem só as 5 melhores de cada rodada. Aqui ficam <strong class="text-on-surface">todas</strong> —
         Amazon, Shopee e Mercado Livre, juntas.
       </p>
-      {latest && <p class="hero__stamp" data-updated-label>carimbado às {latest}</p>}
     </div>
   </header>
 
-  <div class="toolbar" id="toolbar">
-    <div class="toolbar__inner">
-      <div class="pills" id="platform-pills" role="tablist" aria-label="Filtrar por loja">
-        <button type="button" class="pill is-active" data-platform-filter="all">Todas</button>
+  <div class="sticky top-0 z-20 bg-surface-card/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.06)]" id="toolbar">
+    <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+      <div class="flex items-center gap-space-xs overflow-x-auto pb-space-xs lg:pb-0" id="platform-pills">
+        <button
+          type="button"
+          class="store-filter-btn is-active px-space-lg py-space-xs rounded-full font-label-action text-label-action transition-all flex items-center gap-space-xs bg-primary text-on-primary shrink-0"
+          data-platform-filter="all"
+        >
+          <span>Todas</span>
+          <span class="px-space-xs py-0.5 rounded-full text-[10px] bg-white/20" data-count-all>{sorted.length}</span>
+        </button>
         {
-          platformsPresent.map((p) => (
-            <button type="button" class="pill" data-platform-filter={p}>
-              <span class="pill__dot" style={`background:${PLATFORMS[p]?.dot ?? "#999"}`} />
-              {platformLabel(p)}
-            </button>
-          ))
+          platformsPresent.map((p) => {
+            const meta = platformMeta(p);
+            return (
+              <button
+                type="button"
+                class="store-filter-btn px-space-lg py-space-xs rounded-full font-label-action text-label-action transition-all flex items-center gap-space-xs bg-surface-container-lowest text-text-muted hover:text-on-surface shadow-sm shrink-0"
+                data-platform-filter={p}
+              >
+                <span class={`w-2 h-2 rounded-full ${meta.dot}`} />
+                <span>{meta.label}</span>
+                <span class="px-space-xs py-0.5 rounded-full text-[10px] bg-surface-container-high">{countsByPlatform[p]}</span>
+              </button>
+            );
+          })
         }
       </div>
-      <div class="toolbar__controls">
-        <label class="field">
-          <span class="field__label">ordenar</span>
-          <select id="sort-select" class="field__input">
-            <option value="recent">mais recentes</option>
-            <option value="discount">maior desconto</option>
-          </select>
-        </label>
-        <label class="field field--search">
-          <span class="field__label">buscar</span>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm">
+        <div class="relative min-w-[240px] flex-1">
+          <span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-[18px] text-text-muted">search</span>
           <input
             id="search-input"
-            class="field__input"
+            class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm pl-9 pr-space-md py-space-xs rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
             type="search"
-            placeholder="ex: fone, air fryer, tênis..."
+            placeholder="buscar: fone, air fryer, tênis..."
             autocomplete="off"
           />
-        </label>
+        </div>
+        <div class="relative">
+          <select
+            id="sort-select"
+            class="w-full sm:w-auto appearance-none bg-surface-container-lowest text-on-surface font-label-action text-label-action pl-space-md pr-8 py-space-xs rounded-lg shadow-sm focus:outline-none cursor-pointer"
+          >
+            <option value="recent">ordenar: mais recentes</option>
+            <option value="discount">ordenar: maior desconto</option>
+          </select>
+          <span class="material-symbols-outlined absolute right-space-xs top-1/2 -translate-y-1/2 text-[18px] pointer-events-none text-text-muted">expand_more</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <main class="page">
-    <p class="results-count" id="results-count" aria-live="polite"></p>
+  <main class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-lg">
+    <p class="font-body-sm text-body-sm text-text-muted mb-space-md" id="results-count" aria-live="polite"></p>
 
-    <section class="grid" id="grid">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-gutter" id="grid">
       {
-        sorted.map((o) => (
-          <article
-            class="card"
-            data-platform={o.platform}
-            data-discount={o.discount_percent ?? 0}
-            data-collected={o.collected_at}
-            data-title={normalize(o.title)}
-          >
-            <a class="card__link" href={o.affiliate_url} target="_blank" rel="noopener sponsored">
-              <div class="card__photo">
-                <img src={o.image_url} alt="" loading="lazy" />
-                {o.discount_percent ? <span class="stamp">-{Math.round(o.discount_percent)}%</span> : null}
-              </div>
-              <div class="card__body">
-                <h2 class="card__title">{o.title}</h2>
-                <div class="card__price">
-                  {formatBRL(o.price) && <span class="card__now">{formatBRL(o.price)}</span>}
-                  {formatBRL(o.original_price) && <span class="card__was">{formatBRL(o.original_price)}</span>}
-                </div>
-                <div class="card__meta">
-                  <span class="tag">
-                    <span class="tag__dot" style={`background:${PLATFORMS[o.platform]?.dot ?? "#999"}`} />
-                    {platformLabel(o.platform)}
+        sorted.map((o) => {
+          const meta = platformMeta(o.platform);
+          const badge = savingsLabel(o);
+          return (
+            <article
+              class="deal-card group flex flex-col justify-between bg-surface-card rounded-xl p-space-md shadow-sm hover:shadow-md transition-all duration-200"
+              data-platform={o.platform}
+              data-discount={o.discount_percent ?? 0}
+              data-collected={o.collected_at}
+              data-title={normalize(o.title)}
+            >
+              <a class="flex flex-col h-full" href={o.affiliate_url} target="_blank" rel="noopener sponsored">
+                <div class="relative w-full aspect-square bg-canvas-base/50 rounded-lg overflow-hidden flex items-center justify-center p-space-sm mb-space-sm">
+                  <img
+                    class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    src={o.image_url}
+                    alt=""
+                    loading="lazy"
+                  />
+                  <span class={`absolute top-space-xs left-space-xs inline-flex items-center px-space-sm py-space-xs rounded font-label-store text-label-store uppercase ${meta.badgeBg} ${meta.badgeText}`}>
+                    {meta.label}
                   </span>
-                  {o.rating ? (
-                    <span class="card__rating">★ {o.rating.toFixed(1)}{o.review_count ? ` (${o.review_count})` : ""}</span>
+                  {o.discount_percent ? (
+                    <span class="absolute top-space-xs right-space-xs inline-flex items-center px-space-sm py-space-xs rounded-full font-badge-discount text-badge-discount bg-discount-pill-bg text-discount-pill-text shadow-sm">
+                      -{Math.round(o.discount_percent)}%
+                    </span>
                   ) : null}
                 </div>
-              </div>
-            </a>
-          </article>
-        ))
+                <div class="flex flex-col gap-space-xs mb-space-sm">
+                  {o.rating ? (
+                    <div class="flex items-center gap-space-xs font-body-sm text-body-sm text-text-muted">
+                      <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                      <span class="font-semibold text-on-surface">{o.rating.toFixed(1)}</span>
+                      {o.review_count ? <span>({o.review_count})</span> : null}
+                    </div>
+                  ) : null}
+                  <h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface line-clamp-2 leading-snug group-hover:text-secondary transition-colors">
+                    {o.title}
+                  </h2>
+                </div>
+                <div class="mt-auto pt-space-sm flex flex-col gap-space-sm">
+                  <div class="flex items-baseline justify-between gap-space-xs flex-wrap">
+                    <div class="flex flex-col">
+                      {formatBRL(o.original_price) && o.original_price! > (o.price ?? 0) ? (
+                        <span class="font-price-strikethrough text-price-strikethrough text-text-muted line-through">
+                          de {formatBRL(o.original_price)}
+                        </span>
+                      ) : null}
+                      <span class="font-price-featured text-price-featured text-primary tracking-tight">{formatBRL(o.price)}</span>
+                    </div>
+                    {badge ? <span class="text-savings-positive font-label-action text-label-action font-bold">{badge}</span> : null}
+                  </div>
+                  <span class="w-full flex items-center justify-center gap-space-xs py-space-xs px-space-md rounded-lg bg-primary group-hover:bg-primary-container text-on-primary font-label-action text-label-action transition-all">
+                    <span>Pegar Promoção</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_outward</span>
+                  </span>
+                </div>
+              </a>
+            </article>
+          );
+        })
       }
-    </section>
+    </div>
 
-    <p class="empty-state" id="empty-state" hidden>
-      Nenhuma oferta bateu com essa busca. Tenta outra palavra ou limpa o filtro.
-    </p>
+    <div class="hidden flex-col items-center justify-center py-16 px-space-md text-center bg-surface-container-lowest rounded-xl shadow-sm mt-space-md" id="empty-state">
+      <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-text-muted mb-space-md">
+        <span class="material-symbols-outlined text-[28px]">search_off</span>
+      </div>
+      <p class="font-headline-sm text-headline-sm font-semibold text-on-surface max-w-md">
+        Nenhuma oferta bateu com essa busca. Tenta outra palavra ou limpa o filtro.
+      </p>
+      <button
+        type="button"
+        class="mt-space-md px-space-lg py-space-xs rounded-full bg-primary text-on-primary font-label-action text-label-action transition-transform active:scale-95 shadow-sm"
+        id="reset-filters"
+      >
+        Limpar busca e filtros
+      </button>
+    </div>
+
+    <div class="mt-space-xl p-space-md rounded-xl bg-surface-container text-text-muted flex items-start gap-space-sm">
+      <span class="material-symbols-outlined text-[20px] text-text-muted shrink-0 mt-0.5">info</span>
+      <p class="font-body-sm text-body-sm leading-relaxed">
+        Os links são de afiliado — a gente pode ganhar uma comissão em compras feitas por aqui, sem custo extra pra
+        você. Preços e estoque são dos próprios sites e podem mudar a qualquer momento.
+      </p>
+    </div>
   </main>
 
-  <footer class="footer">
-    <p>
-      Os links são de afiliado — a gente pode ganhar uma comissão em compras feitas por aqui, sem custo
-      extra pra você. Preços e estoque são dos próprios sites e podem mudar a qualquer momento.
-    </p>
-    <p class="footer__brand">Central de Ofertas · atualiza sozinho a partir da planilha do canal do Telegram</p>
+  <footer class="w-full bg-surface-container-low mt-space-xl">
+    <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm text-text-muted">
+      <span>Central de Ofertas · atualiza sozinho a partir da planilha do canal do Telegram</span>
+      <div class="flex items-center gap-space-lg">
+        <a class="hover:text-on-surface transition-colors" href={TELEGRAM_URL} target="_blank" rel="noopener">Telegram</a>
+        <a class="hover:text-on-surface transition-colors" href={YOUTUBE_SUBSCRIBE_URL} target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
   </footer>
 </Base>
-
-<style>
-  .hero {
-    background: linear-gradient(180deg, var(--kraft-dark), var(--kraft));
-    padding: 2.75rem 1.25rem 2.25rem;
-    border-bottom: 3px solid var(--ink);
-  }
-  .hero__inner {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  .hero__eyebrow {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin: 0 0 0.4rem;
-  }
-  .hero__title {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: clamp(2.6rem, 9vw, 4.6rem);
-    line-height: 0.92;
-    letter-spacing: 0.01em;
-    margin: 0 0 0.9rem;
-    transform: rotate(-1.2deg);
-    transform-origin: left top;
-  }
-  .hero__subtitle {
-    font-size: 1rem;
-    line-height: 1.5;
-    max-width: 40ch;
-    margin: 0 0 1rem;
-    color: #46392a;
-  }
-  .hero__stamp {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    color: var(--label);
-    background: var(--ink);
-    padding: 0.3rem 0.6rem;
-    border-radius: 3px;
-    transform: rotate(-2deg);
-    margin: 0;
-  }
-
-  .toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--label);
-    border-bottom: 3px solid var(--ink);
-  }
-  .toolbar__inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0.75rem 1.25rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem 1rem;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .pills {
-    display: flex;
-    gap: 0.4rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-  .pills::-webkit-scrollbar {
-    display: none;
-  }
-  .pill {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: var(--ink);
-    background: transparent;
-    border: 2px solid var(--ink);
-    border-radius: 999px;
-    padding: 0.32rem 0.75rem;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
-  }
-  .pill.is-active {
-    background: var(--ink);
-    color: var(--label);
-  }
-  .pill__dot,
-  .tag__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    outline: 1px solid rgba(0, 0, 0, 0.35);
-  }
-
-  .toolbar__controls {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-  .field__label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-  }
-  .field__input {
-    font-family: var(--font-body);
-    font-size: 0.88rem;
-    border: 2px solid var(--ink);
-    border-radius: 6px;
-    padding: 0.35rem 0.55rem;
-    background: var(--label);
-    color: var(--ink);
-    min-width: 9rem;
-  }
-  .field__input:focus-visible {
-    outline: 3px solid var(--stamp);
-    outline-offset: 1px;
-  }
-  .field--search {
-    flex: 1 1 14rem;
-  }
-  .field--search .field__input {
-    width: 100%;
-  }
-
-  .page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.25rem 1.25rem 2.5rem;
-  }
-
-  .results-count {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin: 0 0 0.9rem;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.9rem;
-  }
-  @media (min-width: 640px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.1rem;
-    }
-  }
-  @media (min-width: 960px) {
-    .grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  @media (min-width: 1280px) {
-    .grid {
-      grid-template-columns: repeat(5, 1fr);
-    }
-  }
-
-  .card {
-    background: var(--label);
-    clip-path: polygon(
-      0 10px,
-      10px 0,
-      calc(100% - 10px) 0,
-      100% 10px,
-      100% calc(100% - 10px),
-      calc(100% - 10px) 100%,
-      10px 100%,
-      0 calc(100% - 10px)
-    );
-    box-shadow: 0 6px 14px -9px rgba(34, 29, 23, 0.55);
-    animation: stamp-in 0.32s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
-  }
-  .card:nth-child(3n + 1) {
-    animation-delay: 0.02s;
-  }
-  .card:nth-child(3n + 2) {
-    animation-delay: 0.06s;
-  }
-  .card:nth-child(3n + 3) {
-    animation-delay: 0.1s;
-  }
-  @keyframes stamp-in {
-    from {
-      opacity: 0;
-      transform: scale(0.94) rotate(-1deg);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  .card.is-hidden {
-    display: none;
-  }
-
-  .card__link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-  }
-  .card__link:focus-visible {
-    outline: 3px solid var(--stamp);
-    outline-offset: 2px;
-  }
-
-  .card__photo {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    background: #f1ece0;
-    overflow: hidden;
-  }
-  .card__photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 0.6rem;
-  }
-  .stamp {
-    position: absolute;
-    top: 0.55rem;
-    right: -0.4rem;
-    background: var(--stamp);
-    color: var(--label);
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
-    padding: 0.28rem 0.55rem 0.22rem 0.65rem;
-    transform: rotate(6deg);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
-  }
-
-  .card__body {
-    padding: 0.65rem 0.7rem 0.8rem;
-  }
-  .card__title {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.85rem;
-    line-height: 1.3;
-    margin: 0 0 0.4rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 2.2em;
-  }
-  .card__price {
-    display: flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.45rem;
-  }
-  .card__now {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 1.15rem;
-    color: var(--crate);
-  }
-  .card__was {
-    font-size: 0.75rem;
-    color: var(--muted);
-    text-decoration: line-through;
-  }
-  .card__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-  }
-  .card__rating {
-    font-size: 0.68rem;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .empty-state {
-    text-align: center;
-    font-family: var(--font-body);
-    color: var(--muted);
-    padding: 3rem 1rem;
-  }
-
-  .footer {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.5rem 1.25rem 3rem;
-    font-size: 0.78rem;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-  .footer__brand {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-top: 0.6rem;
-  }
-</style>
 
 <script>
   type CardInfo = {
@@ -504,9 +293,10 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
   const pillsWrap = document.getElementById("platform-pills");
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement | null;
   const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
+  const resetBtn = document.getElementById("reset-filters");
 
   if (grid && resultsCount && emptyState && pillsWrap && sortSelect && searchInput) {
-    const cards: CardInfo[] = Array.from(grid.querySelectorAll<HTMLElement>(".card")).map((el) => ({
+    const cards: CardInfo[] = Array.from(grid.querySelectorAll<HTMLElement>(".deal-card")).map((el) => ({
       el,
       platform: el.dataset.platform || "",
       discount: Number(el.dataset.discount || 0),
@@ -523,6 +313,17 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
         .toLowerCase();
     }
 
+    function setActivePill(platform: string) {
+      activePlatform = platform;
+      pillsWrap!.querySelectorAll(".store-filter-btn").forEach((btn) => {
+        const isActive = (btn as HTMLElement).dataset.platformFilter === platform;
+        btn.classList.toggle("bg-primary", isActive);
+        btn.classList.toggle("text-on-primary", isActive);
+        btn.classList.toggle("bg-surface-container-lowest", !isActive);
+        btn.classList.toggle("text-text-muted", !isActive);
+      });
+    }
+
     function render() {
       const query = normalize(searchInput!.value.trim());
       const sortMode = sortSelect!.value;
@@ -537,9 +338,9 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
         sortMode === "discount" ? b.discount - a.discount : b.collected.localeCompare(a.collected)
       );
 
-      // reordena via CSS order (sem tirar/recolocar nós — evita reflow do fetch de imagem)
       cards.forEach((c) => {
-        c.el.classList.toggle("is-hidden", !visible.includes(c));
+        c.el.classList.toggle("hidden", !visible.includes(c));
+        c.el.classList.toggle("flex", visible.includes(c));
       });
       visible.forEach((c, i) => {
         c.el.style.order = String(i);
@@ -549,20 +350,26 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
         visible.length === cards.length
           ? `${visible.length} ofertas agora`
           : `${visible.length} de ${cards.length} ofertas`;
-      emptyState!.hidden = visible.length > 0;
+
+      emptyState!.classList.toggle("hidden", visible.length > 0);
+      emptyState!.classList.toggle("flex", visible.length === 0);
     }
 
     pillsWrap.addEventListener("click", (ev) => {
       const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("[data-platform-filter]");
       if (!btn) return;
-      activePlatform = btn.dataset.platformFilter || "all";
-      pillsWrap.querySelectorAll(".pill").forEach((p) => p.classList.remove("is-active"));
-      btn.classList.add("is-active");
+      setActivePill(btn.dataset.platformFilter || "all");
       render();
     });
 
     sortSelect.addEventListener("change", render);
     searchInput.addEventListener("input", render);
+
+    resetBtn?.addEventListener("click", () => {
+      searchInput.value = "";
+      setActivePill("all");
+      render();
+    });
 
     render();
   }

@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #1c1b1b;
+  --color-secondary: #bb0112;
+  --color-on-secondary: #ffffff;
+  --color-background: #fef9f0;
+  --color-canvas-base: #f4efe6;
+  --color-surface: #fef9f0;
+  --color-surface-card: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f3ea;
+  --color-surface-container: #f2ede4;
+  --color-surface-container-high: #ece8df;
+  --color-surface-container-highest: #e7e2d9;
+  --color-on-surface: #1d1c16;
+  --color-on-surface-variant: #444748;
+  --color-outline: #747878;
+  --color-outline-variant: #c4c7c7;
+  --color-text-muted: #6e685f;
+  --color-border-subtle: #e6dec8;
+  --color-savings-positive: #16a34a;
+  --color-discount-pill-bg: #dc2626;
+  --color-discount-pill-text: #ffffff;
+  --color-store-amazon-primary: #ff9900;
+  --color-store-amazon-badge: #232f3e;
+  --color-store-shopee-primary: #ee4d2d;
+  --color-store-shopee-badge: #fff0ed;
+  --color-store-mercadolivre-primary: #ffe600;
+  --color-store-mercadolivre-badge: #2d3277;
+  --color-telegram: #229ed9;
+  --color-youtube: #ff0000;
+
+  --spacing-margin-desktop: 3rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-margin: 1.5rem;
+  --spacing-gutter-desktop: 1.5rem;
+  --spacing-gutter: 1.25rem;
+  --spacing-space-lg: 1.25rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-xs: 0.25rem;
+
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-headline-md: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-headline-sm: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body-sm: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body-md: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-label-action: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-label-store: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-price-featured: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-price-strikethrough: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-badge-discount: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 400;
+
+  --text-badge-discount: 12px;
+  --text-badge-discount--line-height: 14px;
+  --text-badge-discount--letter-spacing: 0.02em;
+  --text-badge-discount--font-weight: 800;
+
+  --text-label-action: 13px;
+  --text-label-action--line-height: 16px;
+  --text-label-action--font-weight: 600;
+
+  --text-price-featured: 24px;
+  --text-price-featured--line-height: 28px;
+  --text-price-featured--letter-spacing: -0.02em;
+  --text-price-featured--font-weight: 800;
+
+  --text-headline-lg: 30px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+
+  --text-label-store: 11px;
+  --text-label-store--line-height: 14px;
+  --text-label-store--letter-spacing: 0.04em;
+  --text-label-store--font-weight: 700;
+
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--font-weight: 400;
+
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 700;
+
+  --text-price-strikethrough: 13px;
+  --text-price-strikethrough--line-height: 16px;
+  --text-price-strikethrough--font-weight: 400;
+
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--font-weight: 600;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  overscroll-behavior: none;
+}
+img {
+  max-width: 100%;
+}
+a {
+  color: inherit;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
