@@ -1,5 +1,6 @@
 ---
 import { TELEGRAM_URL, YOUTUBE_SUBSCRIBE_URL } from "../lib/site";
+import Icon from "./Icon.astro";
 
 interface Props {
   latest?: string | null;
@@ -12,7 +13,7 @@ const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL :
   <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-md flex flex-col gap-space-sm">
     <div class="flex items-center justify-between gap-gutter flex-wrap">
       <a href={base} class="flex items-center gap-space-sm">
-        <span class="material-symbols-outlined text-secondary text-[26px]">local_fire_department</span>
+        <Icon name="flame" class="w-[26px] h-[26px] text-secondary" />
         <span class="font-headline-md text-headline-md font-extrabold tracking-tight text-primary">CENTRAL DE OFERTAS</span>
       </a>
       <div class="flex items-center gap-space-sm flex-wrap">
