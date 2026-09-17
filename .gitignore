@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+google_credentials.json
+.env
+__pycache__/
+*.pyc

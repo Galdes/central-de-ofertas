@@ -1,0 +1,569 @@
+---
+import Base from "../layouts/Base.astro";
+import ofertasRaw from "../data/ofertas.json";
+
+interface Oferta {
+  platform: "amazon" | "shopee" | "mercadolivre" | string;
+  asin: string;
+  title: string;
+  price: number | null;
+  original_price: number | null;
+  discount_percent: number | null;
+  rating: number | null;
+  review_count: string | null;
+  image_url: string;
+  affiliate_url: string;
+  collected_at: string;
+}
+
+const ofertas = (ofertasRaw as Oferta[]).filter((o) => o.affiliate_url && o.title);
+
+const PLATFORMS: Record<string, { label: string; dot: string }> = {
+  amazon: { label: "Amazon", dot: "#F2A93B" },
+  shopee: { label: "Shopee", dot: "#EE4D2D" },
+  mercadolivre: { label: "Mercado Livre", dot: "#FFD100" },
+};
+
+function platformLabel(key: string) {
+  return PLATFORMS[key]?.label ?? key;
+}
+
+function formatBRL(value: number | null) {
+  if (value === null || value === undefined) return null;
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatWhen(raw: string) {
+  // "YYYY-MM-DD HH:MM:SS" (horário de Brasília, já vem pronto do coletor)
+  const m = raw?.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/);
+  if (!m) return raw ?? "";
+  const [, , mo, d, h, mi] = m;
+  return `${d}/${mo} às ${h}:${mi}`;
+}
+
+function normalize(s: string) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+const sorted = [...ofertas].sort((a, b) => (b.collected_at || "").localeCompare(a.collected_at || ""));
+const platformsPresent = Array.from(new Set(sorted.map((o) => o.platform)));
+const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : null;
+---
+
+<Base
+  title="Central de Ofertas — Amazon, Shopee e Mercado Livre num lugar só"
+  description="Todas as ofertas que a gente encontra na Amazon, Shopee e Mercado Livre — não só o top 5 que cabe no Telegram. Atualiza sozinho, direto da fonte."
+>
+  <header class="hero">
+    <div class="hero__inner">
+      <p class="hero__eyebrow">achados de todo dia</p>
+      <h1 class="hero__title">CENTRAL<br />DE OFERTAS</h1>
+      <p class="hero__subtitle">
+        No Telegram cabem só as 5 melhores de cada rodada. Aqui ficam <strong>todas</strong> —
+        Amazon, Shopee e Mercado Livre, juntas.
+      </p>
+      {latest && <p class="hero__stamp" data-updated-label>carimbado às {latest}</p>}
+    </div>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar__inner">
+      <div class="pills" id="platform-pills" role="tablist" aria-label="Filtrar por loja">
+        <button type="button" class="pill is-active" data-platform-filter="all">Todas</button>
+        {
+          platformsPresent.map((p) => (
+            <button type="button" class="pill" data-platform-filter={p}>
+              <span class="pill__dot" style={`background:${PLATFORMS[p]?.dot ?? "#999"}`} />
+              {platformLabel(p)}
+            </button>
+          ))
+        }
+      </div>
+      <div class="toolbar__controls">
+        <label class="field">
+          <span class="field__label">ordenar</span>
+          <select id="sort-select" class="field__input">
+            <option value="recent">mais recentes</option>
+            <option value="discount">maior desconto</option>
+          </select>
+        </label>
+        <label class="field field--search">
+          <span class="field__label">buscar</span>
+          <input
+            id="search-input"
+            class="field__input"
+            type="search"
+            placeholder="ex: fone, air fryer, tênis..."
+            autocomplete="off"
+          />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <main class="page">
+    <p class="results-count" id="results-count" aria-live="polite"></p>
+
+    <section class="grid" id="grid">
+      {
+        sorted.map((o) => (
+          <article
+            class="card"
+            data-platform={o.platform}
+            data-discount={o.discount_percent ?? 0}
+            data-collected={o.collected_at}
+            data-title={normalize(o.title)}
+          >
+            <a class="card__link" href={o.affiliate_url} target="_blank" rel="noopener sponsored">
+              <div class="card__photo">
+                <img src={o.image_url} alt="" loading="lazy" />
+                {o.discount_percent ? <span class="stamp">-{Math.round(o.discount_percent)}%</span> : null}
+              </div>
+              <div class="card__body">
+                <h2 class="card__title">{o.title}</h2>
+                <div class="card__price">
+                  {formatBRL(o.price) && <span class="card__now">{formatBRL(o.price)}</span>}
+                  {formatBRL(o.original_price) && <span class="card__was">{formatBRL(o.original_price)}</span>}
+                </div>
+                <div class="card__meta">
+                  <span class="tag">
+                    <span class="tag__dot" style={`background:${PLATFORMS[o.platform]?.dot ?? "#999"}`} />
+                    {platformLabel(o.platform)}
+                  </span>
+                  {o.rating ? (
+                    <span class="card__rating">★ {o.rating.toFixed(1)}{o.review_count ? ` (${o.review_count})` : ""}</span>
+                  ) : null}
+                </div>
+              </div>
+            </a>
+          </article>
+        ))
+      }
+    </section>
+
+    <p class="empty-state" id="empty-state" hidden>
+      Nenhuma oferta bateu com essa busca. Tenta outra palavra ou limpa o filtro.
+    </p>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Os links são de afiliado — a gente pode ganhar uma comissão em compras feitas por aqui, sem custo
+      extra pra você. Preços e estoque são dos próprios sites e podem mudar a qualquer momento.
+    </p>
+    <p class="footer__brand">Central de Ofertas · atualiza sozinho a partir da planilha do canal do Telegram</p>
+  </footer>
+</Base>
+
+<style>
+  .hero {
+    background: linear-gradient(180deg, var(--kraft-dark), var(--kraft));
+    padding: 2.75rem 1.25rem 2.25rem;
+    border-bottom: 3px solid var(--ink);
+  }
+  .hero__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .hero__eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0 0 0.4rem;
+  }
+  .hero__title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 9vw, 4.6rem);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    margin: 0 0 0.9rem;
+    transform: rotate(-1.2deg);
+    transform-origin: left top;
+  }
+  .hero__subtitle {
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 40ch;
+    margin: 0 0 1rem;
+    color: #46392a;
+  }
+  .hero__stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--label);
+    background: var(--ink);
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    transform: rotate(-2deg);
+    margin: 0;
+  }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--label);
+    border-bottom: 3px solid var(--ink);
+  }
+  .toolbar__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pills {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .pills::-webkit-scrollbar {
+    display: none;
+  }
+  .pill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--ink);
+    background: transparent;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.32rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .pill.is-active {
+    background: var(--ink);
+    color: var(--label);
+  }
+  .pill__dot,
+  .tag__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    outline: 1px solid rgba(0, 0, 0, 0.35);
+  }
+
+  .toolbar__controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .field__label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .field__input {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    padding: 0.35rem 0.55rem;
+    background: var(--label);
+    color: var(--ink);
+    min-width: 9rem;
+  }
+  .field__input:focus-visible {
+    outline: 3px solid var(--stamp);
+    outline-offset: 1px;
+  }
+  .field--search {
+    flex: 1 1 14rem;
+  }
+  .field--search .field__input {
+    width: 100%;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 1.25rem 2.5rem;
+  }
+
+  .results-count {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+  }
+  @media (min-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.1rem;
+    }
+  }
+  @media (min-width: 960px) {
+    .grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  @media (min-width: 1280px) {
+    .grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  .card {
+    background: var(--label);
+    clip-path: polygon(
+      0 10px,
+      10px 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% calc(100% - 10px),
+      calc(100% - 10px) 100%,
+      10px 100%,
+      0 calc(100% - 10px)
+    );
+    box-shadow: 0 6px 14px -9px rgba(34, 29, 23, 0.55);
+    animation: stamp-in 0.32s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  }
+  .card:nth-child(3n + 1) {
+    animation-delay: 0.02s;
+  }
+  .card:nth-child(3n + 2) {
+    animation-delay: 0.06s;
+  }
+  .card:nth-child(3n + 3) {
+    animation-delay: 0.1s;
+  }
+  @keyframes stamp-in {
+    from {
+      opacity: 0;
+      transform: scale(0.94) rotate(-1deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .card.is-hidden {
+    display: none;
+  }
+
+  .card__link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card__link:focus-visible {
+    outline: 3px solid var(--stamp);
+    outline-offset: 2px;
+  }
+
+  .card__photo {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #f1ece0;
+    overflow: hidden;
+  }
+  .card__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.6rem;
+  }
+  .stamp {
+    position: absolute;
+    top: 0.55rem;
+    right: -0.4rem;
+    background: var(--stamp);
+    color: var(--label);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    padding: 0.28rem 0.55rem 0.22rem 0.65rem;
+    transform: rotate(6deg);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .card__body {
+    padding: 0.65rem 0.7rem 0.8rem;
+  }
+  .card__title {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin: 0 0 0.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.2em;
+  }
+  .card__price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.45rem;
+  }
+  .card__now {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--crate);
+  }
+  .card__was {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .card__rating {
+    font-size: 0.68rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    font-family: var(--font-body);
+    color: var(--muted);
+    padding: 3rem 1rem;
+  }
+
+  .footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .footer__brand {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.6rem;
+  }
+</style>
+
+<script>
+  type CardInfo = {
+    el: HTMLElement;
+    platform: string;
+    discount: number;
+    collected: string;
+    title: string;
+  };
+
+  const grid = document.getElementById("grid");
+  const resultsCount = document.getElementById("results-count");
+  const emptyState = document.getElementById("empty-state");
+  const pillsWrap = document.getElementById("platform-pills");
+  const sortSelect = document.getElementById("sort-select") as HTMLSelectElement | null;
+  const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
+
+  if (grid && resultsCount && emptyState && pillsWrap && sortSelect && searchInput) {
+    const cards: CardInfo[] = Array.from(grid.querySelectorAll<HTMLElement>(".card")).map((el) => ({
+      el,
+      platform: el.dataset.platform || "",
+      discount: Number(el.dataset.discount || 0),
+      collected: el.dataset.collected || "",
+      title: el.dataset.title || "",
+    }));
+
+    let activePlatform = "all";
+
+    function normalize(s: string) {
+      return s
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase();
+    }
+
+    function render() {
+      const query = normalize(searchInput!.value.trim());
+      const sortMode = sortSelect!.value;
+
+      let visible = cards.filter((c) => {
+        const platformOk = activePlatform === "all" || c.platform === activePlatform;
+        const queryOk = !query || c.title.includes(query);
+        return platformOk && queryOk;
+      });
+
+      visible = visible.sort((a, b) =>
+        sortMode === "discount" ? b.discount - a.discount : b.collected.localeCompare(a.collected)
+      );
+
+      // reordena via CSS order (sem tirar/recolocar nós — evita reflow do fetch de imagem)
+      cards.forEach((c) => {
+        c.el.classList.toggle("is-hidden", !visible.includes(c));
+      });
+      visible.forEach((c, i) => {
+        c.el.style.order = String(i);
+      });
+
+      resultsCount!.textContent =
+        visible.length === cards.length
+          ? `${visible.length} ofertas agora`
+          : `${visible.length} de ${cards.length} ofertas`;
+      emptyState!.hidden = visible.length > 0;
+    }
+
+    pillsWrap.addEventListener("click", (ev) => {
+      const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("[data-platform-filter]");
+      if (!btn) return;
+      activePlatform = btn.dataset.platformFilter || "all";
+      pillsWrap.querySelectorAll(".pill").forEach((p) => p.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      render();
+    });
+
+    sortSelect.addEventListener("change", render);
+    searchInput.addEventListener("input", render);
+
+    render();
+  }
+</script>
