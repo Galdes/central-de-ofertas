@@ -141,7 +141,20 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
               data-collected={o.collected_at}
               data-title={normalize(o.title)}
             >
-              <a class="flex flex-col h-full" href={o.affiliate_url} target="_blank" rel="noopener sponsored">
+              <a
+                class="flex flex-col h-full"
+                href={o.affiliate_url}
+                target="_blank"
+                rel="noopener sponsored"
+                data-analytics-event="select_offer"
+                data-analytics-params={JSON.stringify({
+                  platform: o.platform,
+                  item_id: o.asin,
+                  item_name: o.title,
+                  price: o.price,
+                  discount_percent: o.discount_percent,
+                })}
+              >
                 <div class="relative w-full aspect-square bg-canvas-base/50 rounded-lg overflow-hidden flex items-center justify-center p-space-sm mb-space-sm">
                   <img
                     class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
@@ -241,6 +254,10 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
   const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
   const resetBtn = document.getElementById("reset-filters");
 
+  function track(name: string, params: Record<string, unknown> = {}) {
+    if (typeof (window as any).gtag === "function") (window as any).gtag("event", name, params);
+  }
+
   if (grid && resultsCount && emptyState && pillsWrap && sortSelect && searchInput) {
     const cards: CardInfo[] = Array.from(grid.querySelectorAll<HTMLElement>(".deal-card")).map((el) => ({
       el,
@@ -304,12 +321,26 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
     pillsWrap.addEventListener("click", (ev) => {
       const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("[data-platform-filter]");
       if (!btn) return;
-      setActivePill(btn.dataset.platformFilter || "all");
+      const platform = btn.dataset.platformFilter || "all";
+      setActivePill(platform);
       render();
+      track("filter_platform", { platform });
     });
 
-    sortSelect.addEventListener("change", render);
-    searchInput.addEventListener("input", render);
+    sortSelect.addEventListener("change", () => {
+      render();
+      track("sort_offers", { sort_mode: sortSelect!.value });
+    });
+
+    let searchDebounce: ReturnType<typeof setTimeout>;
+    searchInput.addEventListener("input", () => {
+      render();
+      clearTimeout(searchDebounce);
+      const term = searchInput!.value.trim();
+      if (!term) return;
+      // espera parar de digitar antes de logar — evita 1 evento por tecla
+      searchDebounce = setTimeout(() => track("search", { search_term: term }), 800);
+    });
 
     resetBtn?.addEventListener("click", () => {
       searchInput.value = "";

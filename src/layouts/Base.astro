@@ -27,7 +27,11 @@ const favicon =
     <meta name="google-site-verification" content="cAm8Csc_SPDk6_8i94hlMhVy9SuoYq_Ajm6PjobVjI0" />
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CS6ZQGQ8B8"></script>
-    <script>
+    <script is:inline>
+      // is:inline é essencial aqui — sem isso o Astro processa este <script> como
+      // módulo ES, e "function gtag(){}" fica preso no escopo do módulo em vez de
+      // virar window.gtag. Sem window.gtag global, NENHUM evento customizado do site
+      // (cliques, busca, filtro) consegue disparar, só o dataLayer.push bruto funciona.
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
@@ -35,7 +39,7 @@ const favicon =
       gtag("js", new Date());
       gtag("config", "G-CS6ZQGQ8B8");
     </script>
-    <script type="text/javascript">
+    <script type="text/javascript" is:inline>
       (function (c, l, a, r, i, t, y) {
         c[a] =
           c[a] ||
@@ -52,5 +56,26 @@ const favicon =
   </head>
   <body class="bg-canvas-base text-on-surface font-sans text-body-md antialiased">
     <slot />
+    <script>
+      // Rastreamento genérico: qualquer elemento com data-analytics-event dispara um
+      // evento no GA4 ao ser clicado. data-analytics-params (JSON) vira os parâmetros
+      // do evento. Assim, componentes (header, rodapé, cards) só precisam desses dois
+      // atributos — sem duplicar listener em cada um.
+      document.addEventListener("click", (ev) => {
+        const el = (ev.target as HTMLElement).closest<HTMLElement>("[data-analytics-event]");
+        if (!el || typeof (window as any).gtag !== "function") return;
+
+        const eventName = el.dataset.analyticsEvent!;
+        let params = {};
+        if (el.dataset.analyticsParams) {
+          try {
+            params = JSON.parse(el.dataset.analyticsParams);
+          } catch {
+            // ignora JSON malformado — não quebra a navegação por causa de analytics
+          }
+        }
+        (window as any).gtag("event", eventName, params);
+      });
+    </script>
   </body>
 </html>

@@ -8,8 +8,26 @@ const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL :
     <div class="flex flex-col sm:flex-row items-center justify-between gap-space-md">
       <span>Central de Ofertas · atualiza sozinho a partir da planilha do canal do Telegram</span>
       <div class="flex items-center gap-space-lg flex-wrap justify-center">
-        <a class="hover:text-on-surface transition-colors" href={TELEGRAM_URL} target="_blank" rel="noopener">Telegram</a>
-        <a class="hover:text-on-surface transition-colors" href={YOUTUBE_SUBSCRIBE_URL} target="_blank" rel="noopener">YouTube</a>
+        <a
+          class="hover:text-on-surface transition-colors"
+          href={TELEGRAM_URL}
+          target="_blank"
+          rel="noopener"
+          data-analytics-event="click_telegram"
+          data-analytics-params='{"location":"footer"}'
+        >
+          Telegram
+        </a>
+        <a
+          class="hover:text-on-surface transition-colors"
+          href={YOUTUBE_SUBSCRIBE_URL}
+          target="_blank"
+          rel="noopener"
+          data-analytics-event="click_youtube"
+          data-analytics-params='{"location":"footer"}'
+        >
+          YouTube
+        </a>
         <a class="hover:text-on-surface transition-colors" href={`${base}termos`}>Termos de Uso</a>
         <a class="hover:text-on-surface transition-colors" href={`${base}privacidade`}>Política de Privacidade</a>
       </div>
