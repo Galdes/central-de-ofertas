@@ -1,0 +1,59 @@
+---
+import { TELEGRAM_URL, YOUTUBE_SUBSCRIBE_URL } from "../lib/site";
+
+interface Props {
+  latest?: string | null;
+}
+const { latest = null } = Astro.props;
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+---
+
+<header class="w-full bg-surface border-b border-border-subtle">
+  <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-md flex flex-col gap-space-sm">
+    <div class="flex items-center justify-between gap-gutter flex-wrap">
+      <a href={base} class="flex items-center gap-space-sm">
+        <span class="material-symbols-outlined text-secondary text-[26px]">local_fire_department</span>
+        <span class="font-headline-md text-headline-md font-extrabold tracking-tight text-primary">CENTRAL DE OFERTAS</span>
+      </a>
+      <div class="flex items-center gap-space-sm flex-wrap">
+        {
+          latest && (
+            <span class="hidden sm:inline-flex items-center gap-space-xs bg-surface-container-low px-space-md py-space-xs rounded-full">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-savings-positive opacity-75" />
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-savings-positive" />
+              </span>
+              <span class="font-body-sm text-body-sm text-text-muted">carimbado às {latest}</span>
+            </span>
+          )
+        }
+        <a
+          class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-telegram hover:opacity-90 text-white font-label-action text-label-action transition-opacity"
+          href={TELEGRAM_URL}
+          target="_blank"
+          rel="noopener"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M21.94 4.11c.26-1.11-.85-2-1.87-1.56L2.4 10.13c-1.2.5-1.19 2.2.02 2.68l4.5 1.77 1.7 5.46c.24.77 1.2 1.03 1.8.48l2.5-2.3 4.4 3.24c.9.66 2.18.18 2.42-.92l3.2-16.43ZM8.6 13.3l9.6-6.02c.3-.19.6.2.35.44l-7.9 7.3c-.3.28-.48.65-.53 1.05l-.23 1.9-.6-2.6c-.1-.44-.4-.8-.79-1.02Z"></path>
+          </svg>
+          <span>Grupo no Telegram</span>
+        </a>
+        <a
+          class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-youtube hover:opacity-90 text-white font-label-action text-label-action transition-opacity"
+          href={YOUTUBE_SUBSCRIBE_URL}
+          target="_blank"
+          rel="noopener"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.5v-7l6.3 3.5-6.3 3.5Z"></path>
+          </svg>
+          <span>Inscrever no YouTube</span>
+        </a>
+      </div>
+    </div>
+    <p class="font-body-sm text-body-sm text-text-muted max-w-2xl">
+      No Telegram cabem só as 5 melhores de cada rodada. Aqui ficam <strong class="text-on-surface">todas</strong> —
+      Amazon, Shopee e Mercado Livre, juntas.
+    </p>
+  </div>
+</header>

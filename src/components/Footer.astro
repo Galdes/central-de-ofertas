@@ -1,0 +1,19 @@
+---
+import { TELEGRAM_URL, YOUTUBE_SUBSCRIBE_URL, DEVELOPER_HANDLE } from "../lib/site";
+const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+---
+
+<footer class="w-full bg-surface-container-low mt-space-xl">
+  <div class="max-w-[1440px] mx-auto px-margin md:px-margin-desktop py-space-lg flex flex-col gap-space-md font-body-sm text-body-sm text-text-muted">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-space-md">
+      <span>Central de Ofertas · atualiza sozinho a partir da planilha do canal do Telegram</span>
+      <div class="flex items-center gap-space-lg flex-wrap justify-center">
+        <a class="hover:text-on-surface transition-colors" href={TELEGRAM_URL} target="_blank" rel="noopener">Telegram</a>
+        <a class="hover:text-on-surface transition-colors" href={YOUTUBE_SUBSCRIBE_URL} target="_blank" rel="noopener">YouTube</a>
+        <a class="hover:text-on-surface transition-colors" href={`${base}termos`}>Termos de Uso</a>
+        <a class="hover:text-on-surface transition-colors" href={`${base}privacidade`}>Política de Privacidade</a>
+      </div>
+    </div>
+    <p class="text-center sm:text-left">Desenvolvido e mantido por {DEVELOPER_HANDLE}</p>
+  </div>
+</footer>
