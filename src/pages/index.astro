@@ -6,7 +6,7 @@ import Icon from "../components/Icon.astro";
 import ofertasRaw from "../data/ofertas.json";
 
 interface Oferta {
-  platform: "amazon" | "shopee" | "mercadolivre" | string;
+  platform: "amazon" | "shopee" | "mercadolivre" | "magalu" | string;
   asin: string;
   title: string;
   price: number | null;
@@ -25,6 +25,7 @@ const PLATFORMS: Record<string, { label: string; badgeBg: string; badgeText: str
   amazon: { label: "Amazon", badgeBg: "bg-store-amazon-badge", badgeText: "text-store-amazon-primary", dot: "bg-store-amazon-primary" },
   shopee: { label: "Shopee", badgeBg: "bg-store-shopee-badge", badgeText: "text-store-shopee-primary", dot: "bg-store-shopee-primary" },
   mercadolivre: { label: "Mercado Livre", badgeBg: "bg-store-mercadolivre-primary", badgeText: "text-store-mercadolivre-badge", dot: "bg-store-mercadolivre-primary" },
+  magalu: { label: "Magalu", badgeBg: "bg-store-magalu-primary", badgeText: "text-store-magalu-badge", dot: "bg-store-magalu-primary" },
 };
 
 function platformMeta(key: string) {
@@ -67,8 +68,8 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
 ---
 
 <Base
-  title="Central de Ofertas — Amazon, Shopee e Mercado Livre num lugar só"
-  description="Todas as ofertas que a gente encontra na Amazon, Shopee e Mercado Livre — não só o top 5 que cabe no Telegram. Atualiza sozinho, direto da fonte."
+  title="Central de Ofertas — Amazon, Shopee, Mercado Livre e Magalu num lugar só"
+  description="Todas as ofertas que a gente encontra na Amazon, Shopee, Mercado Livre e Magalu — não só o top 5 que cabe no Telegram. Atualiza sozinho, direto da fonte."
 >
   <SiteHeader latest={latest} />
 
@@ -192,6 +193,7 @@ const latest = sorted[0]?.collected_at ? formatWhen(sorted[0].collected_at) : nu
                         </span>
                       ) : null}
                       <span class="font-price-featured text-price-featured text-primary tracking-tight">{formatBRL(o.price)}</span>
+                      {o.platform === "magalu" ? <span class="font-body-sm text-body-sm text-text-muted">no Pix</span> : null}
                     </div>
                     {badge ? <span class="text-savings-positive font-label-action text-label-action font-bold">{badge}</span> : null}
                   </div>

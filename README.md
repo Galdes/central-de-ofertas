@@ -1,6 +1,6 @@
 # Central de Ofertas
 
-Feed público com as ofertas de Amazon, Shopee e Mercado Livre coletadas pelo bot
+Feed público com as ofertas de Amazon, Shopee, Mercado Livre e Magalu coletadas pelo bot
 [amazon-telegram](https://github.com/Galdes/amazon-telegram) — enquanto o Telegram só
 manda o top 5 de cada rodada, aqui fica tudo que foi coletado nos últimos dias.
 

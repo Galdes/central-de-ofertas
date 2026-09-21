@@ -1,4 +1,4 @@
-"""Lê as abas Amazon/Shopee/MercadoLivre da planilha do bot (amazon-telegram) e gera
+"""Lê as abas Amazon/Shopee/MercadoLivre/Magalu da planilha do bot (amazon-telegram) e gera
 src/data/ofertas.json — o feed que a home do site renderiza no build.
 
 Site público, planilha e credenciais só de leitura por aqui: aceita as credenciais da
@@ -28,6 +28,7 @@ WORKSHEETS = {
     "amazon": os.getenv("GOOGLE_WORKSHEET_AMAZON", "Amazon"),
     "shopee": os.getenv("GOOGLE_WORKSHEET_SHOPEE", "Shopee"),
     "mercadolivre": os.getenv("GOOGLE_WORKSHEET_ML", "MercadoLivre"),
+    "magalu": os.getenv("GOOGLE_WORKSHEET_MAGALU", "Magalu"),
 }
 
 # Segunda linha de defesa: mesmo que HISTORY_RETENTION_DAYS mude no outro repositório,
