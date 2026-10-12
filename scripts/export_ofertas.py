@@ -11,6 +11,7 @@ import os
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -34,6 +35,10 @@ WORKSHEETS = {
 # Segunda linha de defesa: mesmo que HISTORY_RETENTION_DAYS mude no outro repositório,
 # o site nunca mostra oferta com mais de N dias.
 MAX_AGE_DAYS = int(os.getenv("OFERTAS_MAX_AGE_DAYS", "7"))
+
+# O bot grava o link com a tag do Telegram (ofertastel-20). No site trocamos pela tag
+# própria, pra o relatório da Amazon Associados separar a receita de cada canal.
+AMAZON_SITE_TAG = os.getenv("AMAZON_SITE_TAG", "ofertastel-site-20")
 
 NUMERIC_FIELDS = ["price", "original_price", "discount_percent", "rating"]
 
@@ -64,6 +69,15 @@ def _clean_review_count(value):
     return value.strip().strip("()").replace("\xa0", " ") or None
 
 
+def _with_site_tag(url):
+    parsed = urlparse(url)
+    if "amazon." not in parsed.netloc:
+        return url
+    query = parse_qs(parsed.query)
+    query["tag"] = [AMAZON_SITE_TAG]
+    return urlunparse(parsed._replace(query=urlencode(query, doseq=True)))
+
+
 def _read_worksheet(sheet, platform, worksheet_name):
     try:
         worksheet = sheet.worksheet(worksheet_name)
@@ -87,6 +101,8 @@ def _read_worksheet(sheet, platform, worksheet_name):
             continue  # sem preço não dá pra mostrar uma oferta de verdade
         item["review_count"] = _clean_review_count(item.get("review_count"))
         item["platform"] = platform
+        if platform == "amazon":
+            item["affiliate_url"] = _with_site_tag(item["affiliate_url"])
         items.append(item)
     return items
 
